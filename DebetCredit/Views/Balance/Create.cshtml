@@ -1,0 +1,152 @@
+﻿@using DebetCredit.Models;
+
+@model GlobalModel<BalanceModel>
+@{
+    ViewBag.Title = "Создание";
+
+    ViewBag.BalanceTypes = Model.GetBalanceTypes(Model.Row.TypeID);
+    ViewBag.CategoryTypes = Model.GetCategoryTypes(Model.Row.CategoryID);
+
+    bool noCategory = ViewBag.CategoryTypes.Length == 0;
+    object categoryAttributes = new { @class = "form-control" };
+    object disabledCategoryAttributes = new { @class = "form-control", @disabled = true };
+
+    ViewBag.DisabledAddButton = noCategory;
+    ViewBag.CategoryAttributes = noCategory ? disabledCategoryAttributes : categoryAttributes;
+}
+
+<h2>Добавление</h2>
+
+@using (Html.BeginForm())
+{
+    @Html.AntiForgeryToken()
+    <div class="form-horizontal">
+        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+        <div class="form-group">
+            @Html.LabelFor(model => model.Row.Date, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @Html.TextBoxFor(model => model.Row.Date, new { @type = "date", @class = "form-control", @Value = Model.Row.Date.ToString("yyyy-MM-dd") })
+                @Html.ValidationMessageFor(model => model.Row.Date, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.Row.TypeID, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @Html.DropDownListFor(model => model.Row.TypeID, ViewBag.BalanceTypes as SelectListItem[], htmlAttributes: new { @class = "form-control" })
+            </div>
+        </div>
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.Row.CategoryID, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @Html.DropDownListFor(model => model.Row.CategoryID, ViewBag.CategoryTypes as SelectListItem[], htmlAttributes: ViewBag.CategoryAttributes as object)
+            </div>
+        </div>
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.Row.Amount, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @Html.EditorFor(model => model.Row.Amount, new { htmlAttributes = new { @class = "form-control" } })
+                @Html.ValidationMessageFor(model => model.Row.Amount, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.Row.Comment, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @Html.EditorFor(model => model.Row.Comment, new { htmlAttributes = new { @class = "form-control" } })
+                @Html.ValidationMessageFor(model => model.Row.Comment, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+        <div class="form-group">
+            <div class="col-md-offset-2 col-md-10">
+                <input id="Row_SubmitForm" type="submit" value="Добавить" class="btn btn-default" disabled=@ViewBag.DisabledAddButton />
+            </div>
+        </div>
+    </div>
+}
+
+<div>
+    @Html.ActionLink("Вернуться к списку", "Index")
+</div>
+
+<script>
+    let typeID_key = 'Row_TypeID'
+    let categoryID_key = 'Row_CategoryID'
+    let submitForm_key = 'Row_SubmitForm'
+
+    let TypeID = {
+        element: document.getElementById(typeID_key),
+        set: value => TypeID.element.value = value,
+        get: () => TypeID.element.value
+    }
+
+    let CategoryID = {
+        element: document.getElementById(categoryID_key),
+        set: value => CategoryID.element.value = value,
+        get: () => CategoryID.element.value,
+        enable: () => CategoryID.element.disabled = undefined,
+        disable: () => CategoryID.element.disabled = true
+    }
+
+    let SubmitForm = {
+        element: document.getElementById(submitForm_key),
+        enable: () => SubmitForm.element.disabled = undefined,
+        disable: () => SubmitForm.element.disabled = true
+    }
+
+    let update = async () => {
+        CategoryID.disable()
+
+        let response = await fetch('/Balance/Category', {
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+
+        let requiredType = TypeID.get()
+        let object = await response.json()
+        let categories = object.filter(c => c.Type == requiredType)
+
+        let getOptions = () => categories.map(c => {
+            let option = document.createElement('option')
+
+            option.text = c.Name
+            option.value = c.ID
+
+            return option
+        })
+
+        let setOptions = () => {
+            let options = getOptions()
+
+            if (options.length == 0) {
+                return false
+            }
+
+            while (CategoryID.element.children.length > 0) {
+                CategoryID.element.remove(0)
+            }
+
+            options.forEach(option => CategoryID.element.appendChild(option))
+            return true
+        }
+
+        if (setOptions()) {
+            CategoryID.enable()
+            SubmitForm.enable()
+        }
+        else {
+            CategoryID.disable()
+            CategoryID.set(undefined)
+            SubmitForm.disable()
+        }
+    }
+
+    TypeID.element.addEventListener('change', async _ => await update())
+
+    document.onloadeddata = update
+
+</script>

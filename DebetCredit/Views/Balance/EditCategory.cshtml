@@ -1,0 +1,52 @@
+﻿@using DebetCredit.Models;
+@using DebetCredit.Services;
+
+@model GlobalModel<CategoryModel>
+@{
+    ViewBag.Title = "Редактировать категорию";
+
+    ViewBag.BalanceTypes = Model.GetBalanceTypes(Model.Row.TypeID);
+}
+
+<h2>Редактировать категорию</h2>
+
+@using (Html.BeginForm())
+{
+    @Html.AntiForgeryToken()
+
+    <div class="form-horizontal">
+        <hr />
+        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+        @Html.HiddenFor(model => model.Row.ID)
+        @Html.HiddenFor(model => model.Row.TypeID)
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.Row.TypeID, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @Html.DropDownListFor(model => model.Row.TypeID, ViewBag.BalanceTypes as SelectListItem[], htmlAttributes: new { @class = "form-control", @disabled = true })
+            </div>
+        </div>
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.Row.CategoryName, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @Html.EditorFor(model => model.Row.CategoryName, new { htmlAttributes = new { @class = "form-control" } })
+                @Html.ValidationMessageFor(model => model.Row.CategoryName, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+        <div class="form-group">
+            <div class="col-md-offset-2 col-md-10">
+                <input type="submit" value="Сохранить" class="btn btn-default" />
+            </div>
+        </div>
+    </div>
+}
+
+<div>
+    @Html.ActionLink("К списку категорий", "Category")
+</div>
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+}

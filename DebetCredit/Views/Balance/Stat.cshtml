@@ -1,0 +1,45 @@
+﻿@model DebetCredit.Models.Statistic
+@{
+    ViewBag.Title = "Статистика";
+}
+<br />
+<div class="container">
+    <div class="row">
+        <div class="col-md-6 text-right">
+
+        </div>
+    </div>
+</div>
+<br />
+<div>Год : @Model.Year</div>
+<br />
+<div class="row">
+    <div class="col-md-2">
+
+    </div>
+    <div class="col-md-10">
+        <table class="table table-bordered table-striped  text-center" id="dataTable">
+            <tbody>
+                <tr>
+                    @foreach (var value in Model.Table.CategoryNames)
+                    {
+                        <td><b>@value</b></td>
+                    }
+                <tr>
+                    @foreach (var row in Model.Table.GetRows())
+                    {
+                    <tr>
+                        @foreach (var value in row.GetStringValues())
+                        {
+                            <td>@value</td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+        </div>
+    </div>
+
+
+
+

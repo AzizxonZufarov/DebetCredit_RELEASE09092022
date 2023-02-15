@@ -1,0 +1,87 @@
+﻿@using System.Linq;
+@using DebetCredit.Models;
+
+@model GlobalModel<BalanceModel>
+@{
+    ViewBag.Title = "Статистика";
+
+    ViewBag.TotalIncoming = Model.Rows.Where(row => row.Incoming).Select(row => row.Amount).Sum().ToString();
+    ViewBag.TotalOutcoming = Model.Rows.Where(row => row.Outcoming).Select(row => row.Amount).Sum().ToString();
+}
+
+<br />
+<div class="row">
+
+    <div class="col-md-6">
+
+        <table class="table table-bordered text-center">
+            <tr>
+                <td class="text-center" colspan="5"><b>Доходы</b></td>
+            </tr>
+            <tr>
+                <td><b>Дата</b></td>
+                <td><b>Категория</b></td>
+                <td><b>Сумма</b></td>
+                <td><b>Комментарии</b></td>
+            </tr>
+            @foreach (var item in Model.Rows)
+            {
+                if (item.Incoming)
+                {
+                    <tr>
+                        <td>@item.Date.ToString("dd.MM.yyyy")</td>
+                        <td>@Html.DisplayFor(model => item.CategoryName)</td>
+                        <td>@Html.DisplayFor(model => item.Amount)</td>
+                        <td>@Html.DisplayFor(model => item.Comment)</td>
+                    </tr>
+                }
+            }
+            <tr>
+                <th colspan="2">
+                    Итого:
+                </th>
+                <th colspan="2">
+                    @ViewBag.TotalIncoming
+                </th>
+            </tr>
+            <tr>
+            </tr>
+        </table>
+
+    </div>
+    <div class="col-md-6">
+
+        <table class="table table-bordered text-center">
+            <tr>
+                <td colspan="5"><b>Расходы</b></td>
+            </tr>
+            <tr>
+                <td><b>Дата</b></td>
+                <td><b>Категория</b></td>
+                <td><b>Сумма</b></td>
+                <td><b>Комментарии</b></td>
+            </tr>
+            @foreach (var item in Model.Rows)
+            {
+                if (item.Outcoming)
+                {
+                    <tr>
+                        <td>@item.Date.ToString("dd.MM.yyyy")</td>
+                        <td>@Html.DisplayFor(model => item.CategoryName)</td>
+                        <td>@Html.DisplayFor(model => item.Amount)</td>
+                        <td>@Html.DisplayFor(model => item.Comment)</td>
+                    </tr>
+                }
+            }
+            <tr>
+                <th colspan="2">
+                    Итого: 
+                </th>
+                <th colspan="2">
+                    @ViewBag.TotalOutcoming
+                </th>
+            </tr>
+        </table>
+
+    </div>
+</div>

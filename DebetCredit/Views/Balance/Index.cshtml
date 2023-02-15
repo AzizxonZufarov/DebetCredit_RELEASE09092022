@@ -1,0 +1,98 @@
+﻿@using System.Linq;
+@using DebetCredit.Models;
+
+@model GlobalModel<BalanceModel>
+@{
+    ViewBag.Title = "Главная";
+
+    var beginDate = Model.Rows.LastOrDefault()?.Date ?? DateTime.Now;
+    var endDate = Model.Rows.FirstOrDefault()?.Date ?? DateTime.Now;
+
+    ViewBag.End = endDate.ToString("yyyy-MM-dd");
+    ViewBag.Begin = beginDate.ToString("yyyy-MM-dd");
+
+    var totalTemp = 0;
+
+    ViewBag.UpdateTotalAmount = new Func<BalanceModel, int>(model =>
+    {
+        totalTemp = model.Incoming ? totalTemp + model.Amount : totalTemp - model.Amount;
+
+        return totalTemp;
+    });
+
+    ViewBag.GetFormattedAmount = new Func<BalanceModel, string>(model =>
+    {
+        var amountString = model.Amount.ToString();
+
+        return model.Incoming ? "+" + amountString : "-" + amountString;
+    });
+
+    ViewBag.GetStyleAmount = new Func<BalanceModel, string>(model => model.Incoming ? "color: #4cae4c" : "color: #d43f3a");
+}
+<br />
+<div class="container">
+    <div class="row">
+        <div class="col-md-6 text-left">
+            @using (Html.BeginForm("DateRange", "Balance", FormMethod.Post))
+            {
+                <input type="date" name="begin" value=@ViewBag.Begin />
+                <input type="date" name="end" value=@ViewBag.End />
+                <input type="submit" class="btn btn-default" name="submit" value="Фильтровать" />
+            }
+        </div>
+        <div class="col-md-6 text-right">
+            <a class="btn btn-info" href="@Url.Action("Create","Balance")">Добавить</a>
+        </div>
+    </div>
+</div>
+<br />
+<div class="row">
+    <div class="col-md-2">
+        <a class="btn btn-warning" href="@Url.Action("Incoming", "Balance")">Доходы</a><br /><br />
+        <a class="btn btn-warning" href="@Url.Action("Outcoming", "Balance")">Расходы</a>  <br /><br />
+        <a class="btn btn-info" href="@Url.Action("Category", "Balance")">Список категорий</a> <br /><br />
+        <a class="btn btn-success" href="@Url.Action("Stat", "Balance")">Статистика по месяцам</a>
+    </div>
+    <div class="col-md-10">
+        <table class="table table-bordered table-striped  text-center" id="dataTable">
+            <thead>
+                <tr>
+                    <td><b>Дата</b></td>
+                    <td><b>Тип</b></td>
+                    <td><b>Категория</b></td>
+                    <td><b>Сумма</b></td>
+                    <td><b>Баланс</b></td>
+                    <td><b>Комментарии</b></td>
+                    <td><b>Действия</b></td>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.Rows.OrderBy(row => row.Date))
+                {
+                    DateTimeOffset dateTimeOffSet = DateTimeOffset.Parse(item.Date.ToString());
+
+                    long resdate = dateTimeOffSet.ToUnixTimeMilliseconds();
+                    <tr>
+                        <td><span style="font-size:0px;color:white">@resdate</span>@item.Date.ToString("dd.MM.yyyy")</td>
+                        <td>@Html.DisplayFor(model => item.TypeName)</td>
+                        <td>@Html.DisplayFor(model => item.CategoryName)</td>
+                        <td>@Html.Label(ViewBag.GetFormattedAmount(item) as string, new { @style = ViewBag.GetStyleAmount(item) } as object)</td>
+                        <td>@ViewBag.UpdateTotalAmount(item)</td>
+                        <td>@Html.DisplayFor(model => item.Comment)</td>
+                        <td>
+                            <a class="btn btn-success" href="@Url.Action("Edit", "Balance", new { @id = @item.ID })">Редактировать</a>
+                            <br />
+                            <br />
+                            <a class="btn btn-danger" href="@Url.Action("Delete", "Balance", new { @id = @item.ID })">Удалить</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        <script>
+            window.addEventListener("load", () => {
+                document.getElementById('dataTable').tHead.children[0].children[0].click()
+            })
+        </script>
+    </div>
+</div>
